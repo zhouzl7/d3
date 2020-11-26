@@ -9,6 +9,8 @@ __pycache__/
 *.so
 
 # my ignore
+data.json
+pic/
 test.py
 ~*
 .DS_Store
