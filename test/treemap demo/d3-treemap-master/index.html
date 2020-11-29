@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>TreeMapVis</title>
+        <style>
+            body {
+                margin: 0;
+            }
+            .options {
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1;
+            }
+
+            svg {
+                position: fixed;
+                font: 12px sans-serif;
+            }
+
+            .temp {
+                pointer-events: none;
+                opacity: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="options">
+            <button>Zoom out</button>
+        </div>
+
+        <svg class="treemap"></svg>
+        <svg class="temp"></svg>
+
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <script src="data.json"></script>
+        <script src="treemap.js"></script>
+    </body>
+</html>
