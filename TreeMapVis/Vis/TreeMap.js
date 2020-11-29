@@ -3,7 +3,7 @@ const height = window.innerHeight;
 
 const animationSpeed = 500;
 
-let color = d3.scaleSequential([8, 0], d3.interpolateMagma);
+var color = d3.scaleSequential([8, 0], d3.interpolateMagma);
 
 function treemap(data) {
     return d3.treemap()
@@ -26,18 +26,6 @@ function randomId() {
     return 'xxxxxxx-zhouzl-xxxxxxx'.replace(/[x]/g, function() {
         return (Math.random() * 16 | 0).toString(16);
     });
-}
-
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 function zoomin(path, root) {
@@ -111,10 +99,9 @@ function render(data) {
     // Create title
     node.append('title')
         .text(function(d) {
-            const path = getPath(d, '/');
-            const icon = path.includes('.') ? '📋' : '🗂️';
+            const icon = d.children ?  '🗂️' : '📋';
             d.path = getPath(d, '.');
-            return icon + getPath(d, '/') + '\n' + formatBytes(d.value);
+            return icon + getPath(d, '/') + '\n' + d.value;
         });
 
     // Create rectangle
@@ -149,7 +136,7 @@ function render(data) {
         })
         .selectAll('tspan')
         .data(function(d) {
-            return [d.data.name, formatBytes(d.value)];
+            return [d.data.name, d.value];
         })
         .join('tspan')
         .attr('fill-opacity', function(d, i, nodes) {
@@ -209,10 +196,10 @@ function render(data) {
 }
 
 // overview
-render(data);
+render(dataset);
 
 // zoom out
 d3.select('button').on('click', function(){
     // overview
-    render(data);
+    render(dataset);
 });

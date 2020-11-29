@@ -1,4 +1,4 @@
-var dataset = {
+{
     "name": "中国",
     "children": [
         {
