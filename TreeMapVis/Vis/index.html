@@ -4,11 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>TreeMapVis</title>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
         <style>
             body {
                 margin: 0;
             }
-            .options {
+            .zoomoutBth {
                 position: absolute;
                 top: 0;
                 right: 0;
@@ -27,14 +28,13 @@
         </style>
     </head>
     <body>
-        <div class="options">
-            <button>Zoom out</button>
+        <div class="zoomoutBth">
+            <button style="height:18px">Zoom out</button>
         </div>
 
         <svg class="treemap"></svg>
         <svg class="temp"></svg>
 
-        <script src="https://d3js.org/d3.v6.min.js"></script>
         <script src="dataset.json"></script>
         <script src="TreeMap.js"></script>
     </body>

@@ -1,15 +1,25 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-const animationSpeed = 500;
+// 颜色比例尺 1 用于全图
+var color = d3.scaleSequential()
+              .domain([-1, 8])
+              .interpolator(d3.interpolateSpectral);
 
-var color = d3.scaleSequential([8, 0], d3.interpolateMagma);
+// 颜色比例尺 2 用于子图
+var color_zoomin = d3.scaleSequential()
+                     .domain([8, 0])
+                     .interpolator(d3.interpolateMagma);
 
+// 判断是否为全图
+var is_overview = true 
+
+// treemap 数据绑定
 function treemap(data) {
     return d3.treemap()
              .size([width, height])
              .paddingOuter(5)
-             .paddingTop(25)
+             .paddingTop(20)
              .paddingInner(2)
              .round(true)
              (d3.hierarchy(data)
@@ -22,13 +32,16 @@ function treemap(data) {
              );
 }
 
+// 随机id
 function randomId() {
     return 'xxxxxxx-zhouzl-xxxxxxx'.replace(/[x]/g, function() {
         return (Math.random() * 16 | 0).toString(16);
     });
 }
 
+// 放大深入
 function zoomin(path, root) {
+    is_overview = false
     const name = path.split('.').splice(-1)[0];
     const normalizedPath = path.split('.')
                                .slice(1)
@@ -56,6 +69,7 @@ function zoomin(path, root) {
     });
 }
 
+// 获取继承信息（路径、省市县）
 function getPath(element, separator) {
     return element.ancestors().reverse().map(
         function(elem) {
@@ -64,6 +78,7 @@ function getPath(element, separator) {
     ).join(separator);
 }
 
+// 绘图
 function render(data) {
     const root = treemap(data);
     
@@ -71,7 +86,7 @@ function render(data) {
     const newSvg = d3.select('.temp')
                      .attr('viewBox', [0, 0, width, height]);
 
-    // Create shadow
+    // 遮蔽
     newSvg.append('filter')
           .attr('id', 'shadow')
           .append('feDropShadow')
@@ -80,7 +95,7 @@ function render(data) {
           .attr('dy', 0)
           .attr('stdDeviation', 2);
 
-    // Create node
+    // 树节点
     const node = newSvg.selectAll('g')
                        .data(d3.group(root, function(d) {
                            return d.height;
@@ -96,30 +111,50 @@ function render(data) {
                            return 'translate(' + d.x0 + ',' + d.y0 + ')'
                         });
     
-    // Create title
+    // 标题
     node.append('title')
         .text(function(d) {
-            const icon = d.children ?  '🗂️' : '📋';
+            const icon = d.children ?  '🌳' : '🍂';
             d.path = getPath(d, '.');
             return icon + getPath(d, '/') + '\n' + d.value;
         });
 
-    // Create rectangle
+    // 矩形
     node.append('rect')
         .attr('id', function(d) {
             return  d.nodeId = randomId();
         })
         .attr('fill', function(d) {
-            return  color(d.height);
+            return  is_overview ? color(d.depth) : color_zoomin(d.height);
         })
         .attr('width', function(d) {
             return  d.x1 - d.x0;
         })
         .attr('height', function(d) {
             return d.y1 - d.y0;
+        })
+        .on('mouseover', function (e, d) {
+            d3.select(this)
+              .attr('width', function(d){
+                  let width = d.x1 - d.x0;
+                  return width < 15 ? width * 2 : width;
+              })
+              .attr('height', function(d){
+                  let height = d.y1 - d.y0;
+                  return height < 15 ? height * 2 : height;
+              })
+              .attr('fill', "steelblue");
+        })
+        .on("mouseout", function(e, d){
+            d3.select(this)
+                .transition()
+                .duration(500)
+                .attr('width', d.x1 - d.x0)
+                .attr('height', d.y1 - d.y0)
+                .attr('fill', is_overview ? color(d.depth) : color_zoomin(d.height));
         });
 
-    // Create clip path for text
+    // 标签的 clip path
     node.append('clipPath')
         .attr('id', function(d) {
             return d.clipId = randomId();
@@ -129,7 +164,7 @@ function render(data) {
             return '#' + d.nodeId;
         });
     
-    // Create labels
+    // 标签
     node.append('text')
         .attr('clip-path', function(d) {
             return 'url(#' + d.clipId + ')';
@@ -146,7 +181,7 @@ function render(data) {
             return d;
         });
     
-    // Set position for parents
+    // 非叶子节点位置
     node.filter(function(d) {
             return d.children;
         })
@@ -154,7 +189,7 @@ function render(data) {
         .attr('dx', 5)
         .attr('y', 15);
     
-    // Set position for everything else that doesn't have children
+    // 叶子节点位置
     node.filter(function(d) {
             return !d.children;
         })
@@ -162,9 +197,9 @@ function render(data) {
         .attr('x', 3)
         .attr('y', function(d, i, nodes) {
             return i === nodes.length - 1 ? 30 : 15;
-        } )
+        })
 
-    // Add click event
+    // 点击非叶子节点，非根节点
     node.filter(function(d) { 
             return d.children && d !== root;
         })
@@ -172,34 +207,42 @@ function render(data) {
         .on('click', function(e, d) { 
             return zoomin(d.path, data);
         });
+    
+    // 点击根节点
+    node.filter(function(d) { 
+        return d.children && d == root;
+    })
+    .attr('cursor', 'pointer')
+    .on('click', function(e, d) { 
+        return zoomin(d.path, data);
+    });
 
-    // Fade out old svg
+    // 旧图淡出
     svg.transition()
-    // .ease(d3.easeCubicIn)
-       .duration(animationSpeed)
+       .duration(2000)
        .attrTween('opacity', function() {
            return d3.interpolate(1, 0);
-        })
+       })
 
-    // Fade in new svg
+    // 新图渐入
     newSvg.transition()
-    // .ease(d3.easeCubicOut)
-          .duration(animationSpeed)
+          .duration(2000)
           .attrTween('opacity', function() { 
               return d3.interpolate(0, 1);
-            })
+          })
           .attr('class', 'treemap')
           .on('end', function() {
-              // At the very end, swap classes and remove everything from the temporary svg
               svg.attr('class', 'temp').selectAll('*').remove();
           });
 }
 
-// overview
+// 绘制全图
+is_overview = true;
 render(dataset);
 
-// zoom out
+// 拉远缩小
 d3.select('button').on('click', function(){
-    // overview
+    // 绘制全图
+    is_overview = true;
     render(dataset);
 });
