@@ -12,11 +12,16 @@ var color_zoomin = d3.scaleSequential()
                      .interpolator(d3.interpolateMagma);
 
 // 判断是否为全图
-var is_overview = true 
+var is_overview = true
+// 视图路径
+var view_path = dataset.name;
+// 布局算法
+var layout_algorithm = d3.treemapResquarify
 
 // treemap 数据绑定
 function treemap(data) {
     return d3.treemap()
+			 .tile(layout_algorithm)
              .size([width, height])
              .paddingOuter(5)
              .paddingTop(20)
@@ -39,7 +44,7 @@ function randomId() {
     });
 }
 
-// 放大深入
+// 拉近放大
 function zoomin(path, root) {
     is_overview = false
     const name = path.split('.').splice(-1)[0];
@@ -204,7 +209,12 @@ function render(data) {
             return d.children && d !== root;
         })
         .attr('cursor', 'pointer')
-        .on('click', function(e, d) { 
+        .on('click', function(e, d) {
+            // 拉近放大
+            let path_list = view_path.split('.');
+            let child_path_list = d.path.split('.');
+            path_list = path_list.slice(0, path_list.length-1).concat(child_path_list);
+            view_path = path_list.join('.');
             return zoomin(d.path, data);
         });
     
@@ -213,8 +223,21 @@ function render(data) {
         return d.children && d == root;
     })
     .attr('cursor', 'pointer')
-    .on('click', function(e, d) { 
-        return zoomin(d.path, data);
+    .on('click', function() {
+        // 拉远缩小
+        let path_list = view_path.split('.');
+        view_path = is_overview ? view_path : path_list.slice(0, path_list.length-1).join('.');
+        let father_dataset = dataset;
+        is_overview = true;
+        for(let i = 1; i < path_list.length - 1; i++){
+            is_overview = false;
+            for(let j = 0; j < father_dataset["children"].length; j++) {
+                if(father_dataset["children"][j].name == path_list[i]){
+                    father_dataset = father_dataset["children"][j];
+                }
+            }
+        }
+        return render(father_dataset);
     });
 
     // 旧图淡出
@@ -234,15 +257,23 @@ function render(data) {
           .on('end', function() {
               svg.attr('class', 'temp').selectAll('*').remove();
           });
+    
+    // 切换布局算法
+    d3.select('select').on('change', function () {
+        layout_algorithm = d3[d3.select(this).property('value')];
+        render(data);
+    });
 }
 
 // 绘制全图
 is_overview = true;
+view_path = dataset.name;
 render(dataset);
 
-// 拉远缩小
+// 绘制全图
 d3.select('button').on('click', function(){
     // 绘制全图
     is_overview = true;
+    view_path = dataset.name;
     render(dataset);
 });

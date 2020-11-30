@@ -9,7 +9,7 @@
             body {
                 margin: 0;
             }
-            .zoomoutBth {
+            .overviewBth {
                 position: absolute;
                 top: 0;
                 right: 0;
@@ -28,8 +28,16 @@
         </style>
     </head>
     <body>
-        <div class="zoomoutBth">
-            <button style="height:18px">Zoom out</button>
+        <div class="overviewBth">
+            <select style="height:16px">
+                <option value="treemapBinary">treemapBinary</option>
+                <option value="treemapDice">treemapDice</option>
+                <option value="treemapSlice">treemapSlice</option>
+                <option value="treemapSliceDice">treemapSliceDice</option>
+                <option value="treemapSquarify">treemapSquarify</option>
+                <option value="treemapResquarify" selected="selected">treemapResquarify</option>
+            </select> 
+            <button style="height:18px">Overview</button>
         </div>
 
         <svg class="treemap"></svg>

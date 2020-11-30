@@ -1,6 +1,6 @@
 //画布大小
-var width = 1000;
-var height = 800;
+const width = window.innerWidth * 0.8;
+const height = window.innerHeight;
 
 //画布周边的空白
 var padding = {left:60, right:60, top:60, bottom:60};  
@@ -8,7 +8,6 @@ var padding = {left:60, right:60, top:60, bottom:60};
 //在 body 里添加一个 SVG 画布   
 var svg = d3.select("body")
     .append("svg")
-    .attr('transform', 'translate(' + 200 + ',' + 80 + ')')
     .attr("width", width)
     .attr("height", height);  
 
