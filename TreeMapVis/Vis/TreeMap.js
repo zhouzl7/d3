@@ -74,6 +74,23 @@ function zoomin(path, root) {
     });
 }
 
+// 拉远缩小
+function zoomout() {
+    let path_list = view_path.split('.');
+    view_path = is_overview ? view_path : path_list.slice(0, path_list.length-1).join('.');
+    let father_dataset = dataset;
+    is_overview = true;
+    for(let i = 1; i < path_list.length - 1; i++){
+        is_overview = false;
+        for(let j = 0; j < father_dataset["children"].length; j++) {
+            if(father_dataset["children"][j].name == path_list[i]){
+                father_dataset = father_dataset["children"][j];
+            }
+        }
+    }
+    return render(father_dataset);
+}
+
 // 获取继承信息（路径、省市县）
 function getPath(element, separator) {
     return element.ancestors().reverse().map(
@@ -225,19 +242,7 @@ function render(data) {
     .attr('cursor', 'pointer')
     .on('click', function() {
         // 拉远缩小
-        let path_list = view_path.split('.');
-        view_path = is_overview ? view_path : path_list.slice(0, path_list.length-1).join('.');
-        let father_dataset = dataset;
-        is_overview = true;
-        for(let i = 1; i < path_list.length - 1; i++){
-            is_overview = false;
-            for(let j = 0; j < father_dataset["children"].length; j++) {
-                if(father_dataset["children"][j].name == path_list[i]){
-                    father_dataset = father_dataset["children"][j];
-                }
-            }
-        }
-        return render(father_dataset);
+        return zoomout();
     });
 
     // 旧图淡出
